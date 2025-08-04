@@ -8,7 +8,7 @@ import './App.css'
 function App() {
   return (
     <PatientDataProvider>
-      <Router basename="/survival-analysis">
+      <Router basename="/survival-analysis/">
         <Routes>
           <Route path="/" element={<PatientForm />} />
           <Route path="/analysis" element={<AnalysisResults />} />
