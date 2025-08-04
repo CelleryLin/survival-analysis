@@ -1,0 +1,106 @@
+#root {
+  max-width: 100%;
+  margin: 0;
+  text-align: left;
+}
+
+/* Custom styles for the survival analysis system */
+.required-field::after {
+  content: " *";
+  color: red;
+}
+
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.card {
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  margin-bottom: 20px;
+}
+
+.form-label {
+  font-weight: 500;
+}
+
+.form-control, .form-select {
+  font-size: 14px;
+}
+
+.error-message {
+  color: #dc3545;
+  font-size: 12px;
+  margin-top: 5px;
+  display: none;
+}
+
+.form-control.error {
+  border-color: #dc3545;
+}
+
+.category-header {
+  background: linear-gradient(135deg, #1979d9, #8ac4ff);
+  color: white;
+  padding: 10px 15px;
+  margin: 20px 0 15px 0;
+  border-radius: 8px;
+  font-weight: 600;
+}
+
+.chart-container {
+  min-height: 300px;
+  background-color: #f8f9fa;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.25rem;
+}
+
+.patient-info-expanded {
+  max-height: 500px;
+  overflow-y: auto;
+}
+
+.info-category {
+  background-color: #f8f9fa;
+  padding: 8px;
+  margin: 8px 0;
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.info-row {
+  padding: 4px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.info-row:last-child {
+  border-bottom: none;
+}
+
+.rotate-icon {
+  transition: transform 0.3s ease;
+}
+
+.rotate-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.rotate-180 {
+  transform: rotate(180deg);
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}
