@@ -10,8 +10,8 @@ function App() {
     <PatientDataProvider>
       <Router>
         <Routes>
-          <Route path="/" element={<PatientForm />} />
-          <Route path="/analysis" element={<AnalysisResults />} />
+          <Route path="/survival-analysis/" element={<PatientForm />} />
+          <Route path="/survival-analysis/analysis" element={<AnalysisResults />} />
         </Routes>
       </Router>
     </PatientDataProvider>
