@@ -62,6 +62,8 @@ response = {
 }
 ```
 
+Please do not adjust the structure or field names. If you need to modify this, please post an issue on the GitHub repository.
+
 ## Complete Input Data Fields
 
 Here are all the fields the frontend can send. Handle missing/empty values gracefully:
