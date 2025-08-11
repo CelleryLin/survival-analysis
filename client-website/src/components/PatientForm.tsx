@@ -1,13 +1,14 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePatientData } from '../context/PatientDataContext'
-import type { PatientData } from '../context/PatientDataContext'
+import type { PatientData, TreatmentMethods } from '../context/PatientDataContext'
 
 const PatientForm: React.FC = () => {
   const navigate = useNavigate()
   const { setPatientData } = usePatientData()
   const [formData, setFormData] = useState<PatientData>({
     name: '',
+    Hospital: '',
     Age: '',
     Sex: '',
     BMI: '',
@@ -38,17 +39,28 @@ const PatientForm: React.FC = () => {
     HTN: '',
     ESRD: '',
     CKD: '',
-    Liver_transplantation: '',
-    Surgical_resection: '',
-    Radiofrequency: '',
-    TACE: '',
-    Target_therapy: '',
-    Immunotherapy: '',
-    HAIC: '',
-    Radiotherapy: '',
-    Best_support_care: '',
-    Hospital: '',
-    preferredLanguage: 'zh'
+    Treatments: [],
+    // Liver_transplantation: '0',
+    // Surgical_resection: '0',
+    // Radiofrequency: '0',
+    // TACE: '0',
+    // Target_therapy: '0',
+    // Immunotherapy: '0',
+    // HAIC: '0',
+    // Radiotherapy: '0',
+    // Best_support_care: '0',
+  })
+
+  const [treatmentMethods, setTreatmentMethods] = useState<TreatmentMethods>({
+    Liver_transplantation: '0',
+    Surgical_resection: '0',
+    Radiofrequency: '0',
+    TACE: '0',
+    Target_therapy: '0',
+    Immunotherapy: '0',
+    HAIC: '0',
+    Radiotherapy: '0',
+    Best_support_care: '0',
   })
 
   const [loading, setLoading] = useState(false)
@@ -90,7 +102,7 @@ const PatientForm: React.FC = () => {
       htn: 'HTN (高血壓)',
       esrd: 'ESRD (末期腎病)',
       ckd: 'CKD (慢性腎病)',
-      treatmentMethods: 'Treatment Methods (治療方式)',
+      treatmentMethods: 'Treatment Methods (治療方式) *',
       liver_transplantation: 'Liver Transplantation (肝臟移植)',
       surgical_resection: 'Surgical Resection (手術切除)',
       radiofrequency: 'Radiofrequency Ablation (射頻消融)',
@@ -105,7 +117,7 @@ const PatientForm: React.FC = () => {
       no: '否',
       startAnalysis: '開始分析',
       loading: '分析中，請稍候...',
-      requiredFieldNote: '* 表示必填欄位 (年齡、性別)',
+      requiredFieldNote: '* 表示必填欄位 (年齡、性別、治療方式)',
       instructions: '使用說明',
       confirm: '確認',
       cancel: '取消',
@@ -143,7 +155,7 @@ const PatientForm: React.FC = () => {
       htn: 'HTN',
       esrd: 'ESRD',
       ckd: 'CKD',
-      treatmentMethods: 'Treatment Methods',
+      treatmentMethods: 'Treatment Methods *',
       liver_transplantation: 'Liver Transplantation',
       surgical_resection: 'Surgical Resection',
       radiofrequency: 'Radiofrequency Ablation',
@@ -168,6 +180,7 @@ const PatientForm: React.FC = () => {
 
   const t = translations[language as keyof typeof translations]
 
+  
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target
     setFormData(prev => ({
@@ -175,7 +188,26 @@ const PatientForm: React.FC = () => {
       [name]: value
     }))
   }
+  
+  const handleTreatmentChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    
+    setTreatmentMethods(prevState => ({
+      ...prevState,
+      [name]: checked ? "1" : "0"
+    }));
+    
+  };
 
+  useEffect(() => {
+    const treatments = Object.keys(treatmentMethods).filter(key => treatmentMethods[key] === "1");
+    // or use (Object.keys(treatmentMethods) as (keyof TreatmentMethods)[]) to avoid type issues
+    setFormData(prev => ({
+      ...prev,
+      Treatments: treatments
+    }))
+  }, [treatmentMethods]);
+  
   const validateNumericInput = (value: string, min: number, max: number): boolean => {
     if (value === '') return true // Allow empty values
     const numValue = parseFloat(value)
@@ -184,7 +216,7 @@ const PatientForm: React.FC = () => {
 
   const checkMissingFields = (): string[] => {
     const missing: string[] = []
-    const allFields = Object.keys(formData).filter(key => key !== 'name' && key !== 'preferredLanguage')
+    const allFields = Object.keys(formData).filter(key => key !== 'name')
     
     allFields.forEach(field => {
       if (!formData[field as keyof PatientData] || formData[field as keyof PatientData] === '') {
@@ -198,13 +230,11 @@ const PatientForm: React.FC = () => {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Validate required fields
     if (!formData.Age || !formData.Sex) {
       alert('請填寫必填欄位：年齡和性別')
       return
     }
 
-    // Validate numeric ranges
     if (formData.Age && !validateNumericInput(formData.Age, 0, 150)) {
       alert('年齡必須在 0-150 之間')
       return
@@ -217,34 +247,28 @@ const PatientForm: React.FC = () => {
 
     // Check missing fields
     const missing = checkMissingFields()
-    const totalFields = Object.keys(formData).length - 2 // Exclude name and preferredLanguage
+    const totalFields = Object.keys(formData).length - 2 // Exclude name, treatments
     const missingPercentage = (missing.length / totalFields) * 100
 
+    if (formData.Treatments.length === 0) {
+      alert('請至少選擇一種治療方式')
+      return
+    }
+    
     if (missingPercentage > 50) {
       setMissingFields(missing)
       setShowConfirmModal(true)
       return
     }
-
     submitForm()
   }
 
   const submitForm = () => {
     setLoading(true)
-    
-    // Update language preference
-    const dataToSubmit = {
-      ...formData,
-      preferredLanguage: language
-    }
-    
-    setPatientData(dataToSubmit)
-    
-    // Simulate loading time
-    setTimeout(() => {
-      navigate('/analysis')
-    }, 1000)
+    setPatientData(formData)
+    navigate('/analysis')
   }
+
 
   return (
     <>
@@ -337,6 +361,10 @@ const PatientForm: React.FC = () => {
                           value={formData.name || ''}
                           onChange={handleInputChange}
                         />
+                      </div>
+                      <div className="col-md-6 mb-3">
+                        <label className="form-label">{t.hospital}</label>
+                        <input type="text" name="Hospital" className="form-control" value={formData.Hospital || ''} onChange={handleInputChange} />
                       </div>
                       <div className="col-md-6 mb-3">
                         <label className="form-label required-field">{t.age}</label>
@@ -526,6 +554,162 @@ const PatientForm: React.FC = () => {
                     }}>
                       <h5 className="mb-0">{t.treatmentMethods}</h5>
                     </div>
+
+                    <div className="row">
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Liver_transplantation" 
+                            id="liver_transplantation"
+                            checked={treatmentMethods.Liver_transplantation === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="liver_transplantation">
+                            {t.liver_transplantation}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Surgical_resection" 
+                            id="surgical_resection"
+                            checked={treatmentMethods.Surgical_resection === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="surgical_resection">
+                            {t.surgical_resection}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Radiofrequency" 
+                            id="radiofrequency"
+                            checked={treatmentMethods.Radiofrequency === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="radiofrequency">
+                            {t.radiofrequency}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="TACE" 
+                            id="tace"
+                            checked={treatmentMethods.TACE === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="tace">
+                            {t.tace}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Target_therapy" 
+                            id="target_therapy"
+                            checked={treatmentMethods.Target_therapy === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="target_therapy">
+                            {t.target_therapy}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Immunotherapy" 
+                            id="immunotherapy"
+                            checked={treatmentMethods.Immunotherapy === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="immunotherapy">
+                            {t.immunotherapy}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="HAIC" 
+                            id="haic"
+                            checked={treatmentMethods.HAIC === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="haic">
+                            {t.haic}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Radiotherapy" 
+                            id="radiotherapy"
+                            checked={treatmentMethods.Radiotherapy === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="radiotherapy">
+                            {t.radiotherapy}
+                          </label>
+                        </div>
+                      </div>
+                      
+                      <div className="col-md-6 mb-3">
+                        <div className="form-check">
+                          <input 
+                            className="form-check-input" 
+                            type="checkbox" 
+                            name="Best_support_care" 
+                            id="best_support_care"
+                            checked={treatmentMethods.Best_support_care === "1"}
+                            onChange={handleTreatmentChange}
+                          />
+                          <label className="form-check-label" htmlFor="best_support_care">
+                            {t.best_support_care}
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    {/* <div className="category-header" style={{
+                      background: 'linear-gradient(135deg, #1979d9, #8ac4ff)',
+                      color: 'white',
+                      padding: '10px 15px',
+                      margin: '20px 0 15px 0',
+                      borderRadius: '8px',
+                      fontWeight: 600
+                    }}>
+                      <h5 className="mb-0">{t.treatmentMethods}</h5>
+                    </div>
                     <div className="row">
                       <div className="col-md-6 mb-3">
                         <label className="form-label">{t.liver_transplantation}</label>
@@ -603,7 +787,7 @@ const PatientForm: React.FC = () => {
                         <label className="form-label">{t.hospital}</label>
                         <input type="text" name="Hospital" className="form-control" value={formData.Hospital || ''} onChange={handleInputChange} />
                       </div>
-                    </div>
+                    </div> */}
 
                     <hr />
                     <p className="text-muted small">{t.requiredFieldNote}</p>

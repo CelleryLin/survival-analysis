@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 export interface PatientData {
   name?: string
+  Hospital?: string
   Age: string
   Sex: string
   BMI?: string
@@ -33,18 +34,30 @@ export interface PatientData {
   HTN?: string
   ESRD?: string
   CKD?: string
-  Liver_transplantation?: string
-  Surgical_resection?: string
-  Radiofrequency?: string
-  TACE?: string
-  Target_therapy?: string
-  Immunotherapy?: string
-  HAIC?: string
-  Radiotherapy?: string
-  Best_support_care?: string
-  Hospital?: string
-  preferredLanguage?: string
+  Treatments: string[]
+  // Liver_transplantation?: string
+  // Surgical_resection?: string
+  // Radiofrequency?: string
+  // TACE?: string
+  // Target_therapy?: string
+  // Immunotherapy?: string
+  // HAIC?: string
+  // Radiotherapy?: string
+  // Best_support_care?: string
 }
+
+export type TreatmentMethods = {
+  Liver_transplantation: "0" | "1";
+  Surgical_resection: "0" | "1";
+  Radiofrequency: "0" | "1";
+  TACE: "0" | "1";
+  Target_therapy: "0" | "1";
+  Immunotherapy: "0" | "1";
+  HAIC: "0" | "1";
+  Radiotherapy: "0" | "1";
+  Best_support_care: "0" | "1";
+};
+
 
 interface PatientDataContextType {
   patientData: PatientData | null

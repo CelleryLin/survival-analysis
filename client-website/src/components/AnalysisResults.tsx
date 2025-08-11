@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { usePatientData } from '../context/PatientDataContext'
 import type { PatientData } from '../context/PatientDataContext'
+import { SurvivalAnalysisAPI } from './ApiUrl'
 
 const AnalysisResults: React.FC = () => {
   const navigate = useNavigate()
@@ -21,16 +22,30 @@ const AnalysisResults: React.FC = () => {
       return
     }
 
-    // Simulate loading and analysis
-    setTimeout(() => {
-      const rate = simulatePrediction(patientData)
-      setSurvivalRate(rate)
+    setTimeout(async () => {
+      console.log(patientData)
+      const response = await fetch(SurvivalAnalysisAPI, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(patientData)
+      })
+      if (!response.ok) {
+        console.error(`Error status: ${response.status}`)
+        setLoading(false)
+        return
+      }
+
+      const data = await response.json()
+      console.log(data)
+      setSurvivalRate(data.survivalRate)
       
       // Set risk level
-      if (rate >= 75) {
+      if (data.survivalRate >= 75) {
         setRiskLevel('低風險')
         setRiskBadgeClass('bg-success')
-      } else if (rate >= 50) {
+      } else if (data.survivalRate >= 50) {
         setRiskLevel('中等風險')
         setRiskBadgeClass('bg-warning text-dark')
       } else {
@@ -39,40 +54,21 @@ const AnalysisResults: React.FC = () => {
       }
 
       // Set comparison text
-      if (rate >= 70) {
+      if (data.survivalRate >= 70) {
         setComparisonText('顯著高於平均水平')
-      } else if (rate >= 55) {
+      } else if (data.survivalRate >= 55) {
         setComparisonText('高於平均水平')
-      } else if (rate >= 45) {
+      } else if (data.survivalRate >= 45) {
         setComparisonText('接近平均水平')
-      } else if (rate >= 30) {
+      } else if (data.survivalRate >= 30) {
         setComparisonText('低於平均水平')
       } else {
         setComparisonText('顯著低於平均水平')
       }
 
       setLoading(false)
-    }, 1500)
+    }, 500)
   }, [patientData])
-
-  // Simulate prediction (same logic as in original HTML)
-  const simulatePrediction = (data: PatientData): number => {
-    const age = parseFloat(data.Age) || 50
-    const tumorSize = parseFloat(data.Maximal_tumor_size || '') || 3
-    const afp = parseFloat(data.AFP || '') || 20
-    const bmi = parseFloat(data.BMI || '') || 23
-
-    let baseRate = 75
-    if (age > 65) baseRate -= 10
-    if (tumorSize > 5) baseRate -= 15
-    if (afp > 400) baseRate -= 20
-    if (bmi < 18.5 || bmi > 30) baseRate -= 5
-    if (data.Cirrhosis === '1' || data.Cirrhosis === 'Yes') baseRate -= 10
-    if (data.BCLC_stage === 'C' || data.BCLC_stage === 'D') baseRate -= 20
-    if (data.Metastasis === '1' || data.Metastasis === 'Yes') baseRate -= 15
-
-    return Math.max(5, Math.min(95, Math.round(baseRate)))
-  }
 
   const generateClinicalAdvice = (): React.ReactElement => {
     if (!patientData) return <></>
@@ -172,22 +168,33 @@ const AnalysisResults: React.FC = () => {
         'HAIC': '肝動脈灌注化療',
         'Radiotherapy': '放射治療',
         'Best_support_care': '最佳支持治療',
-        'Hospital': '醫院'
       }
     }
 
     const dataMap = sections[section as keyof typeof sections] || {}
     const items: React.ReactElement[] = []
-
-    Object.entries(dataMap).forEach(([key, label]) => {
-      const value = patientData[key as keyof PatientData] || '-'
-      items.push(
-        <div key={key} className="info-row d-flex justify-content-between">
-          <span>{label}：</span>
-          <span>{value}</span>
-        </div>
-      )
-    })
+    
+    if (section !== 'treatment') {
+      Object.entries(dataMap).forEach(([key, label]) => {
+        const value = patientData[key as keyof PatientData] || '-'
+        items.push(
+          <div key={key} className="info-row d-flex justify-content-between">
+            <span>{label}：</span>
+            <span>{value}</span>
+          </div>
+        )
+      })
+    }
+    else {
+      // Special handling for treatment methods
+      patientData.Treatments.forEach((e) => {
+        items.push(
+          <div key={e} className="info-row">
+            <span>{sections.treatment[e as keyof typeof sections.treatment]} ({e.replace('_', ' ')})</span>
+          </div>
+        )
+      })
+    }
 
     return items
   }
@@ -288,6 +295,10 @@ const AnalysisResults: React.FC = () => {
                           <td>{patientData?.name || '未命名患者'}</td>
                         </tr>
                         <tr>
+                          <td><strong>醫院：</strong></td>
+                          <td>{patientData?.Hospital || '-'}</td>
+                        </tr>
+                        <tr>
                           <td><strong>性別：</strong></td>
                           <td>{patientData?.Sex === 'M' ? '男性' : '女性'}</td>
                         </tr>
@@ -337,7 +348,7 @@ const AnalysisResults: React.FC = () => {
                         borderRadius: '4px',
                         fontWeight: 500
                       }}>
-                        生理指標
+                        <strong>生理指標</strong>
                       </div>
                       <div>
                         {fillDetailedInfo('physiological')}
@@ -351,7 +362,7 @@ const AnalysisResults: React.FC = () => {
                         borderRadius: '4px',
                         fontWeight: 500
                       }}>
-                        腫瘤相關
+                        <strong>腫瘤相關</strong>
                       </div>
                       <div>
                         {fillDetailedInfo('tumor')}
@@ -365,7 +376,7 @@ const AnalysisResults: React.FC = () => {
                         borderRadius: '4px',
                         fontWeight: 500
                       }}>
-                        病史與疾病狀況
+                        <strong>病史與疾病狀況</strong>
                       </div>
                       <div>
                         {fillDetailedInfo('medical')}
@@ -379,7 +390,7 @@ const AnalysisResults: React.FC = () => {
                         borderRadius: '4px',
                         fontWeight: 500
                       }}>
-                        治療方式
+                        <strong>治療方式</strong>
                       </div>
                       <div>
                         {fillDetailedInfo('treatment')}
