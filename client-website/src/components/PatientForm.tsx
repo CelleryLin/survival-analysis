@@ -200,8 +200,7 @@ const PatientForm: React.FC = () => {
   };
 
   useEffect(() => {
-    const treatments = Object.keys(treatmentMethods).filter(key => treatmentMethods[key] === "1");
-    // or use (Object.keys(treatmentMethods) as (keyof TreatmentMethods)[]) to avoid type issues
+    const treatments = (Object.keys(treatmentMethods) as (keyof TreatmentMethods)[]).filter(key => treatmentMethods[key] === "1");
     setFormData(prev => ({
       ...prev,
       Treatments: treatments
