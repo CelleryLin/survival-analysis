@@ -1,3 +1,3 @@
-const SurvivalAnalysisAPI = 'http://140.117.60.136:5000/api/survival_analysis'
+const SurvivalAnalysisAPI = 'https://shrimp-improved-frequently.ngrok-free.app/api/survival_analysis'
 
 export { SurvivalAnalysisAPI }
